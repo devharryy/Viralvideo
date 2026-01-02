@@ -8,13 +8,13 @@
 <style>
   body {
     margin: 0;
-    background: #000;
     height: 100vh;
-    overflow: hidden;
+    background: #000;
     font-family: Arial, sans-serif;
+    overflow: hidden;
   }
 
-  .video-box {
+  .video {
     position: fixed;
     inset: 0;
     background: url("thumbnail.jpg") center/cover no-repeat;
@@ -23,36 +23,31 @@
     justify-content: center;
   }
 
-  .play-btn {
+  .play {
     width: 80px;
     height: 80px;
-    background: rgba(0,0,0,0.6);
     border-radius: 50%;
+    background: rgba(0,0,0,0.6);
     position: relative;
   }
-
-  .play-btn::after {
+  .play::after {
     content: "";
     position: absolute;
     left: 32px;
     top: 22px;
-    width: 0;
-    height: 0;
     border-left: 26px solid #fff;
     border-top: 18px solid transparent;
     border-bottom: 18px solid transparent;
   }
 
+  /* 10-sec blocker */
   .blocker {
     position: fixed;
     inset: 0;
     z-index: 999;
     display: none;
   }
-
-  .blocker.active {
-    display: block;
-  }
+  .blocker.active { display: block; }
 
   .end {
     display: none;
@@ -64,65 +59,76 @@
     justify-content: center;
     text-align: center;
   }
-
-  .end.active {
-    display: flex;
-  }
+  .end.show { display: flex; }
 </style>
 </head>
 
 <body>
 
-<div class="video-box" id="videoBox" onclick="startPrank()">
-  <div class="play-btn"></div>
+<div class="video" id="video" onclick="start()">
+  <div class="play"></div>
 </div>
 
 <div class="blocker" id="blocker"></div>
 
-<div class="end" id="endBox">
+<div class="end" id="end">
   <div>
     <h1>😂 PRANK THA</h1>
-    <p>Video nahi, sirf audio thi 😎</p>
+    <p>10 sec ke liye phasa diya 😎</p>
   </div>
 </div>
 
-<audio id="audio" preload="auto">
+<audio id="audio">
   <source src="funny.mp3" type="audio/mpeg">
 </audio>
 
 <script>
   const audio = document.getElementById("audio");
   const blocker = document.getElementById("blocker");
+  let blockActive = false;
 
-  function lockBack() {
-    history.pushState(null, null, location.href);
-    window.onpopstate = () => history.pushState(null, null, location.href);
-  }
+  function start() {
+    document.getElementById("video").style.display = "none";
 
-  function startPrank() {
-    document.getElementById("videoBox").style.display = "none";
-    blocker.classList.add("active");
-
-    lockBack();
-
+    // start audio
     audio.volume = 1;
     audio.play();
 
-    // pause allow nahi
-    audio.onpause = () => audio.play();
+    // activate 10-sec block
+    blockActive = true;
+    blocker.classList.add("active");
 
-    // interactions block
-    ["touchstart","touchmove","click","wheel"].forEach(e=>{
-      document.addEventListener(e, ev => ev.preventDefault(), {passive:false});
-    });
+    // one-time back soft lock
+    history.pushState(null, "", location.href);
+
+    // unblock after 10 seconds
+    setTimeout(() => {
+      blockActive = false;
+      blocker.classList.remove("active");
+    }, 10000);
 
     audio.onended = () => {
-      blocker.classList.remove("active");
-      document.getElementById("endBox").classList.add("active");
+      document.getElementById("end").classList.add("show");
     };
   }
 
-  document.addEventListener("contextmenu", e => e.preventDefault());
+  // back button: ignore only during 10 sec
+  window.onpopstate = () => {
+    if (blockActive) {
+      history.pushState(null, "", location.href);
+    }
+  };
+
+  // block interactions only while active
+  ["touchstart","touchmove","click","wheel"].forEach(evt => {
+    document.addEventListener(evt, e => {
+      if (blockActive) e.preventDefault();
+    }, { passive:false });
+  });
+
+  document.addEventListener("contextmenu", e => {
+    if (blockActive) e.preventDefault();
+  });
 </script>
 
 </body>
