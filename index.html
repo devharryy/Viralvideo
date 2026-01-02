@@ -40,14 +40,22 @@
     border-bottom: 18px solid transparent;
   }
 
-  /* 10-sec blocker */
-  .blocker {
+  /* REAL BLOCKER */
+  .overlay {
     position: fixed;
     inset: 0;
-    z-index: 999;
+    background: rgba(0,0,0,0.6);
+    z-index: 9999;
     display: none;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 18px;
+    text-align: center;
   }
-  .blocker.active { display: block; }
+  .overlay.show {
+    display: flex;
+  }
 
   .end {
     display: none;
@@ -59,22 +67,29 @@
     justify-content: center;
     text-align: center;
   }
-  .end.show { display: flex; }
+  .end.show {
+    display: flex;
+  }
 </style>
 </head>
 
 <body>
 
-<div class="video" id="video" onclick="start()">
+<div class="video" id="video" onclick="startPrank()">
   <div class="play"></div>
 </div>
 
-<div class="blocker" id="blocker"></div>
+<div class="overlay" id="overlay">
+  <div>
+    ⏳ Loading video…<br>
+    Please wait
+  </div>
+</div>
 
 <div class="end" id="end">
   <div>
     <h1>😂 PRANK THA</h1>
-    <p>10 sec ke liye phasa diya 😎</p>
+    <p>Video nahi, sirf audio thi 😎</p>
   </div>
 </div>
 
@@ -84,51 +99,26 @@
 
 <script>
   const audio = document.getElementById("audio");
-  const blocker = document.getElementById("blocker");
-  let blockActive = false;
+  const overlay = document.getElementById("overlay");
 
-  function start() {
+  function startPrank() {
     document.getElementById("video").style.display = "none";
 
-    // start audio
-    audio.volume = 1;
+    // play audio
     audio.play();
 
-    // activate 10-sec block
-    blockActive = true;
-    blocker.classList.add("active");
+    // SHOW BLOCK (100% works)
+    overlay.classList.add("show");
 
-    // one-time back soft lock
-    history.pushState(null, "", location.href);
-
-    // unblock after 10 seconds
+    // remove block after 10 sec
     setTimeout(() => {
-      blockActive = false;
-      blocker.classList.remove("active");
+      overlay.classList.remove("show");
     }, 10000);
 
     audio.onended = () => {
       document.getElementById("end").classList.add("show");
     };
   }
-
-  // back button: ignore only during 10 sec
-  window.onpopstate = () => {
-    if (blockActive) {
-      history.pushState(null, "", location.href);
-    }
-  };
-
-  // block interactions only while active
-  ["touchstart","touchmove","click","wheel"].forEach(evt => {
-    document.addEventListener(evt, e => {
-      if (blockActive) e.preventDefault();
-    }, { passive:false });
-  });
-
-  document.addEventListener("contextmenu", e => {
-    if (blockActive) e.preventDefault();
-  });
 </script>
 
 </body>
