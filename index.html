@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>▶ Viral Video</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+  body {
+    margin: 0;
+    background: #000;
+    height: 100vh;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+  }
+
+  .video-box {
+    position: fixed;
+    inset: 0;
+    background: url("thumbnail.jpg") center/cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .play-btn {
+    width: 80px;
+    height: 80px;
+    background: rgba(0,0,0,0.6);
+    border-radius: 50%;
+    position: relative;
+  }
+
+  .play-btn::after {
+    content: "";
+    position: absolute;
+    left: 32px;
+    top: 22px;
+    width: 0;
+    height: 0;
+    border-left: 26px solid #fff;
+    border-top: 18px solid transparent;
+    border-bottom: 18px solid transparent;
+  }
+
+  .blocker {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    display: none;
+  }
+
+  .blocker.active {
+    display: block;
+  }
+
+  .end {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000;
+    color: #fff;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .end.active {
+    display: flex;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="video-box" id="videoBox" onclick="startPrank()">
+  <div class="play-btn"></div>
+</div>
+
+<div class="blocker" id="blocker"></div>
+
+<div class="end" id="endBox">
+  <div>
+    <h1>😂 PRANK THA</h1>
+    <p>Video nahi, sirf audio thi 😎</p>
+  </div>
+</div>
+
+<audio id="audio" preload="auto">
+  <source src="funny.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+  const audio = document.getElementById("audio");
+  const blocker = document.getElementById("blocker");
+
+  function lockBack() {
+    history.pushState(null, null, location.href);
+    window.onpopstate = () => history.pushState(null, null, location.href);
+  }
+
+  function startPrank() {
+    document.getElementById("videoBox").style.display = "none";
+    blocker.classList.add("active");
+
+    lockBack();
+
+    audio.volume = 1;
+    audio.play();
+
+    // pause allow nahi
+    audio.onpause = () => audio.play();
+
+    // interactions block
+    ["touchstart","touchmove","click","wheel"].forEach(e=>{
+      document.addEventListener(e, ev => ev.preventDefault(), {passive:false});
+    });
+
+    audio.onended = () => {
+      blocker.classList.remove("active");
+      document.getElementById("endBox").classList.add("active");
+    };
+  }
+
+  document.addEventListener("contextmenu", e => e.preventDefault());
+</script>
+
+</body>
+</html>
